@@ -26,8 +26,7 @@ var HelloModel = widgets.DOMWidgetModel.extend({
         _model_module : 'procoe',
         _view_module : 'procoe',
         _model_module_version : '0.1.0',
-        _view_module_version : '0.1.0',
-        value : 'Hello World!'
+        _view_module_version : '0.1.0'
     })
 });
 
@@ -44,7 +43,31 @@ var HelloView = widgets.DOMWidgetView.extend({
     },
 
     value_changed: function() {
-        this.el.textContent = this.model.get('value');
+        var codeLines = this.model.get('value');
+        console.log(codeLines);
+        codeLines.forEach((line, i) => {
+          var inputElement = document.createElement('INPUT');
+          inputElement.setAttribute('type', 'text');
+          inputElement.setAttribute('class', 'inputElement');
+          var codeLine = document.createElement('pre');
+          codeLine.setAttribute('style', '-moz-tab-size: 4; tab-size: 4;');
+          codeLine.textContent = line;
+          inputElement.setAttribute('id', `input${i}`);
+          codeLine.appendChild(inputElement);
+          this.el.appendChild(codeLine);
+        });
+
+
+        var button = document.createElement('button');
+        button.textContent = 'button';
+        button.addEventListener('click', function() {
+          var inputs = document.getElementsByClassName('inputElement');
+          for (var i = 0; i < inputs.length; i++) {
+            console.log(inputs[i].value);
+          }
+        });
+        this.el.appendChild(button);
+
     }
 });
 
