@@ -1,6 +1,10 @@
 var widgets = require('@jupyter-widgets/base');
 var _ = require('lodash');
 
+var buttonStyle = 'padding: 5px; margin-top: 5px; margin-bottom: 5px; font-size: 18px;';
+var inputStyle = 'border-top: none; border-left: none; border-right: none; min-width: 300px; width: fit-content; border-bottom: 1px solid darkgrey; outline: none; ';
+var outputStyle = 'margin-top: 20px; margin-bottom: 20px; display: none;';
+
 var ProcoeModel = widgets.DOMWidgetModel.extend({
   defaults: _.extend(widgets.DOMWidgetModel.prototype.defaults(), {
     _model_name: 'ProcoeModel',
@@ -17,14 +21,13 @@ var ProcoeView = widgets.DOMWidgetView.extend({
   programLines: [],
   render: function() {
     this.renderProgramView();
-    this.model.on('change:user_program_result', this.renderUserResult, this);
-    this.model.on('change:solution_program_result', this.renderSolutionResult, this);
     this.renderExecuteButton();
+    this.renderOutputs();
+    this.model.on('change:outputs', this.onOutputsChange, this);
   },
 
   renderProgramView: function() {
     this.programLines = this.model.get('exercise_program');
-    this.programLines.forEach(() => this.inputList.push([]));
     var parsedProgram = this.parseProgram(this.programLines);
     this.el.appendChild(parsedProgram);
   },
@@ -33,33 +36,71 @@ var ProcoeView = widgets.DOMWidgetView.extend({
     var executeButton = document.createElement('button');
     executeButton.innerHTML = 'Execute program';
     executeButton.onclick = () => this.rebuildProgram(this.programLines);
+    executeButton.setAttribute('style', buttonStyle);
     this.el.appendChild(executeButton);
   },
 
-  renderUserResult: function() {
-    var userResultElement = document.getElementById('userResultElement');
-    if (!userResultElement) {
-      userResultElement = document.createElement('div');
-      userResultElement.setAttribute('id', 'userResultElement');
-      this.el.appendChild(userResultElement);
-    }
-    userResultElement.innerHTML = this.model.get('user_program_result');
-    console.log(this.model.get('user_program_result'));
+  renderOutputs: function() {
+    var userOutputElement = document.createElement('div');
+    userOutputElement.setAttribute('id', 'userOutputElement');
+    userOutputElement.setAttribute('style', outputStyle);
+    this.el.appendChild(userOutputElement);
+    var resultElement = document.createElement('div');
+    resultElement.setAttribute('id', 'resultElement');
+    resultElement.setAttribute('style', outputStyle);
+    this.el.appendChild(resultElement);
+    var errorElement = document.createElement('div');
+    errorElement.setAttribute('id', 'errorElement');
+    errorElement.setAttribute('style', outputStyle);
+    this.el.appendChild(errorElement);
   },
 
-  renderSolutionResult: function() {
-    var solutionResultElement = document.getElementById('solutionResultElement');
-    if (!solutionResultElement) {
-      solutionResultElement = document.createElement('div');
-      solutionResultElement.setAttribute('id', 'solutionResultElement');
-      this.el.appendChild(solutionResultElement);
+  onOutputsChange: function() {
+    var outputs = this.model.get('outputs');
+    this.renderUserProgramOutput(outputs.user_program);
+    this.renderResult(outputs.result);
+    this.renderError(outputs.error);
+  },
+
+  renderUserProgramOutput: function(output) {
+    var userOutputElement = document.getElementById('userOutputElement');
+    if (typeof output === 'string' && output.length >= 0) {
+      userOutputElement.setAttribute('style', 'display: block;');
+      userOutputElement.innerHTML = output;
+    } else {
+      userOutputElement.setAttribute('style', 'display: none;');
     }
-    solutionResultElement.innerHTML = this.model.get('solution_program_result');
-    console.log(this.model.get('solution_program_result'));
+  },
+
+  renderResult: function(result) {
+    var resultElement = document.getElementById('resultElement');
+    if (typeof result === 'boolean') {
+      resultElement.setAttribute('style', 'display: block;');
+      if (result) {
+        resultElement.setAttribute('style', 'color: green;');
+        resultElement.innerHTML = 'Correct!!!';
+      } else {
+        resultElement.setAttribute('style', 'color: red;');
+        resultElement.innerHTML = 'Incorrect';
+      }
+    } else {
+      resultElement.setAttribute('style', 'display: none;');
+    }
+  },
+
+  renderError: function(error) {
+    var errorElement = document.getElementById('errorElement');
+    if (typeof error === 'string' && error.length >= 0) {
+      errorElement.setAttribute('style', 'display: block; color: orange;');
+      errorElement.innerHTML = error;
+    } else {
+      errorElement.setAttribute('style', 'display: none;');
+    }
   },
 
   parseProgram: function(programLines) {
     var parsedProgram = document.createElement('div');
+    this.inputList = [];
     programLines.forEach((line, i) => {
       var codeLine = document.createElement('div');
       codeLine.setAttribute('style', 'display: flex; flex-direction: row;');
@@ -68,34 +109,39 @@ var ProcoeView = widgets.DOMWidgetView.extend({
       firstTextElement.textContent = line[0];
       codeLine.appendChild(firstTextElement);
       if (line.length > 1) {
-        for (var j = 1; j < line.length; j++) {
-          var inputElement = document.createElement('INPUT');
+        for (var j = 0; j + 1 < line.length; j++) {
+          var inputElement = document.createElement('input');
           inputElement.setAttribute('type', 'text');
-          inputElement.setAttribute('style', 'min-width: 300px; width: fit-content;');
+          inputElement.setAttribute('style', inputStyle);
           codeLine.appendChild(inputElement);
-          this.inputList[i].push(inputElement);
+          this.inputList.push(inputElement);
           var textElement = document.createElement('pre');
           textElement.setAttribute('style', '-moz-tab-size: 4; tab-size: 4;');
-          textElement.textContent = line[j];
+          textElement.textContent = line[j+1];
           codeLine.appendChild(textElement);
         }
       }
-      if (codeLine.textContent.length > 0) {
-        parsedProgram.appendChild(codeLine);
-      }
+      parsedProgram.appendChild(codeLine);
     });
-
     return parsedProgram;
   },
 
   rebuildProgram: function(programLines) {
     var rebuiltProgram = [];
+    var inputValueList = []
+    this.inputList.forEach((input) => inputValueList.push(input.value));
     programLines.forEach((line, i) => {
       var rebuiltLine = ''
       if (line.length > 1) {
-        for (var j = 0; j < line.length - 1; j++) {
+        rebuiltLine = line[0];
+        for (var j = 1; j < line.length; j++) {
+          var inputValue = inputValueList.shift();
+          if (typeof inputValue !== 'undefined' && typeof inputValue !== 'null') {
+            rebuiltLine = rebuiltLine.concat(inputValue);
+          } else {
+            rebuiltLine = rebuiltLine.concat('');
+          }
           rebuiltLine = rebuiltLine.concat(line[j]);
-          rebuiltLine = rebuiltLine.concat(this.inputList[i][j].value);
         }
       } else {
         rebuiltLine = rebuiltLine.concat(line);

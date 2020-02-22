@@ -1,5 +1,5 @@
 import ipywidgets as widgets
-from traitlets import Unicode, List, observe
+from traitlets import Unicode, List, Bool, Dict, observe
 
 @widgets.register
 class Procoe(widgets.DOMWidget):
@@ -13,8 +13,7 @@ class Procoe(widgets.DOMWidget):
 
     exercise_program = List().tag(sync=True)
     user_program = List().tag(sync=True)
-    user_program_result = Unicode().tag(sync=True)
-    solution_program_result = Unicode().tag(sync=True)
+    outputs = Dict().tag(sync=True)
     observe("user_program", type="change")
 
     def __init__(self, **kwargs):
@@ -23,9 +22,7 @@ class Procoe(widgets.DOMWidget):
         program = file.read().split("\n")
         file.close()
         self.program = program
-        parsed_programs = self.parse_program()
-        self.exercise_program = parsed_programs[0]
-        self.solution_program = parsed_programs[1]
+        self.exercise_program, self.solution_program = self.parse_program()
 
     def parse_program(self):
         exercise_program = []
@@ -49,24 +46,37 @@ class Procoe(widgets.DOMWidget):
                 parsed_solution_line.append(line)
             exercise_program.append(parsed_exercise_line)
             if (len(line) > 0):
-                # solution_program += "".join([str(line_part) for line_part in parsed_solution_line])
                 solution_program.append("".join([str(line_part) for line_part in parsed_solution_line]) + "\n")
-        return [exercise_program, solution_program]
+        return (exercise_program, solution_program)
 
     @observe("user_program")
     def execute_program(self, change):
         parsed_user_program = "".join([str(line) for line in self.user_program])
         parsed_solution_program = "".join([str(line) for line in self.solution_program])
+        outputs = {
+            "user_program": "",
+            "result": None,
+            "error": ""
+        }
+
         try:
             exec(parsed_user_program)
-            user_program_result = str(eval(self.user_program[len(self.user_program) - 1]))
-            self.user_program_result = user_program_result
-        except Exception as ex:
-            self.user_program_result = str(ex)
-        try:
+            user_program_output = str(eval(self.parse_last_program_line(self.user_program[len(self.user_program) - 1])))
+            outputs["user_program"] = user_program_output
             exec(parsed_solution_program)
-            solution_program_result = str(eval(self.solution_program[len(self.solution_program) - 1]))
-            self.solution_program_result = solution_program_result
-            # self.solution_program_result = parsed_solution_program
-        except Execption as ex:
-            self.solution_program_result = "solution program error: " + str(ex)
+            solution_program_output = str(eval(self.parse_last_program_line(self.user_program[len(self.solution_program) - 1])))
+            if user_program_output == solution_program_output:
+                outputs["result"] = True
+            else:
+                outputs["result"] = False
+        except Exception as ex:
+            outputs["error"] = str(ex)
+
+        self.outputs = outputs
+
+    def parse_last_program_line(self, program_line):
+        if ("print(" in program_line) :
+            print_split = program_line.split("print(", 1)
+            if (")" in print_split[1]):
+                return print_split[0] + print_split[1].rsplit(")", 1)[0] + print_split[1].rsplit(")", 1)[1]
+        return program_line
