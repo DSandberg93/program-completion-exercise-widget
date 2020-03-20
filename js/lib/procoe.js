@@ -49,6 +49,10 @@ var ProcoeView = widgets.DOMWidgetView.extend({
     resultElement.setAttribute('id', 'resultElement');
     resultElement.setAttribute('style', outputStyle);
     this.el.appendChild(resultElement);
+    var expectedOutputElement = document.createElement('div');
+    expectedOutputElement.setAttribute('id', 'expectedOutputElement');
+    expectedOutputElement.setAttribute('style', outputStyle);
+    this.el.appendChild(expectedOutputElement);
     var errorElement = document.createElement('div');
     errorElement.setAttribute('id', 'errorElement');
     errorElement.setAttribute('style', outputStyle);
@@ -57,43 +61,80 @@ var ProcoeView = widgets.DOMWidgetView.extend({
 
   onOutputsChange: function() {
     var outputs = this.model.get('outputs');
+    console.log(outputs);
     this.renderUserProgramOutput(outputs.user_program);
     this.renderResult(outputs.result);
+    this.renderExpectedProgramOutput(outputs.expected_result);
     this.renderError(outputs.error);
   },
 
   renderUserProgramOutput: function(output) {
-    var userOutputElement = document.getElementById('userOutputElement');
+    var userOutputElement;
+    for (var i = 0; i < this.el.children.length; i++) {
+      if (this.el.children[i].id === 'userOutputElement') {
+        userOutputElement = this.el.children[i];
+      }
+    }
     if (typeof output === 'string' && output.length >= 0) {
       userOutputElement.setAttribute('style', 'display: block;');
-      userOutputElement.innerHTML = output;
+      userOutputElement.innerHTML = 'Program output: ' + output;
     } else {
+      userOutputElement.innerHTML = null;
       userOutputElement.setAttribute('style', 'display: none;');
     }
   },
 
+  renderExpectedProgramOutput: function(output) {
+    var expectedOutputElement;
+    for (var i = 0; i < this.el.children.length; i++) {
+      if (this.el.children[i].id === 'expectedOutputElement') {
+        expectedOutputElement = this.el.children[i];
+      }
+    }
+    console.log(output);
+    if (typeof output === 'string' && output.length >= 0) {
+      expectedOutputElement.setAttribute('style', 'display: block;');
+      expectedOutputElement.innerHTML = 'Expected output: ' + output;
+    } else {
+      expectedOutputElement.innerHTML = null;
+      expectedOutputElement.setAttribute('style', 'display: none;');
+    }
+  },
+
   renderResult: function(result) {
-    var resultElement = document.getElementById('resultElement');
+    var resultElement;
+    for (var i = 0; i < this.el.children.length; i++) {
+      if (this.el.children[i].id === 'resultElement') {
+        resultElement = this.el.children[i];
+      }
+    }
     if (typeof result === 'boolean') {
       resultElement.setAttribute('style', 'display: block;');
       if (result) {
         resultElement.setAttribute('style', 'color: green;');
-        resultElement.innerHTML = 'Correct!!!';
+        resultElement.innerHTML = 'Your program implementation is correct!!!';
       } else {
         resultElement.setAttribute('style', 'color: red;');
-        resultElement.innerHTML = 'Incorrect';
+        resultElement.innerHTML = 'Your program implementation is incorrect';
       }
     } else {
+      resultElement.innerHTML = null;
       resultElement.setAttribute('style', 'display: none;');
     }
   },
 
   renderError: function(error) {
-    var errorElement = document.getElementById('errorElement');
+    var errorElement;
+    for (var i = 0; i < this.el.children.length; i++) {
+      if (this.el.children[i].id === 'errorElement') {
+        errorElement = this.el.children[i];
+      }
+    }
     if (typeof error === 'string' && error.length >= 0) {
+      errorElement.innerHTML = 'Error: ' + error;
       errorElement.setAttribute('style', 'display: block; color: orange;');
-      errorElement.innerHTML = error;
     } else {
+      errorElement.innerHTML = null;
       errorElement.setAttribute('style', 'display: none;');
     }
   },
@@ -128,7 +169,7 @@ var ProcoeView = widgets.DOMWidgetView.extend({
 
   rebuildProgram: function(programLines) {
     var rebuiltProgram = [];
-    var inputValueList = []
+    var inputValueList = [];
     this.inputList.forEach((input) => inputValueList.push(input.value));
     programLines.forEach((line, i) => {
       var rebuiltLine = ''

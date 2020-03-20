@@ -23,6 +23,7 @@ class Procoe(widgets.DOMWidget):
         file.close()
         self.program = program
         self.exercise_program, self.solution_program = self.parse_program()
+        self.failed_attempt_count = 0
 
     def parse_program(self):
         exercise_program = []
@@ -54,21 +55,26 @@ class Procoe(widgets.DOMWidget):
         parsed_user_program = "".join([str(line) for line in self.user_program])
         parsed_solution_program = "".join([str(line) for line in self.solution_program])
         outputs = {
-            "user_program": "",
+            "user_program": None,
             "result": None,
-            "error": ""
+            "error": None,
+            "expected_result": None,
         }
+
+        exec(parsed_solution_program)
+        solution_program_output = str(eval(self.parse_last_program_line(self.user_program[len(self.solution_program) - 1])))
 
         try:
             exec(parsed_user_program)
             user_program_output = str(eval(self.parse_last_program_line(self.user_program[len(self.user_program) - 1])))
             outputs["user_program"] = user_program_output
-            exec(parsed_solution_program)
-            solution_program_output = str(eval(self.parse_last_program_line(self.user_program[len(self.solution_program) - 1])))
             if user_program_output == solution_program_output:
                 outputs["result"] = True
             else:
                 outputs["result"] = False
+                self.failed_attempt_count += 1
+                if (self.failed_attempt_count >= 5):
+                    outputs["expected_result"] = solution_program_output
         except Exception as ex:
             outputs["error"] = str(ex)
 
