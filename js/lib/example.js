@@ -25,8 +25,8 @@ var HelloModel = widgets.DOMWidgetModel.extend({
         _view_name : 'HelloView',
         _model_module : 'procoe',
         _view_module : 'procoe',
-        _model_module_version : '0.1.0',
-        _view_module_version : '0.1.0'
+        _model_module_version : '1.0.0',
+        _view_module_version : '1.0.0'
     })
 });
 

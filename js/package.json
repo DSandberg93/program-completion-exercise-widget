@@ -1,7 +1,7 @@
 {
   "name": "procoe",
-  "version": "0.1.0",
-  "description": "A custom widget for solving program completion exercises in Python",
+  "version": "1.0.0",
+  "description": "A custom widget for generating user interfaces for program completion exercises in Python",
   "author": "Daniel Sandberg",
   "main": "lib/index.js",
   "repository": {
