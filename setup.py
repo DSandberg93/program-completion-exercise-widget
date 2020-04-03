@@ -153,6 +153,7 @@ setup_args = {
     'author': 'Daniel Sandberg',
     'author_email': 'dsanddev93@gmail.no',
     'url': 'https://github.com//program-completion-exercise-widget',
+    'download_url': 'https://github.com/DSandberg93/program-completion-exercise-widget/archive/1.0.0b1.tar.gz',
     'keywords': [
         'ipython',
         'jupyter',
