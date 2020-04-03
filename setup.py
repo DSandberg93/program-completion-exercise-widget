@@ -127,7 +127,7 @@ with open(os.path.join(here, 'procoe', '_version.py')) as f:
 setup_args = {
     'name': 'procoe',
     'version': version_ns['__version__'],
-    'description': 'A custom widget for solving program completion exercises in Python',
+    'description': 'A custom widget for generating user interfaces for program completion exercises in Python',
     'long_description': LONG_DESCRIPTION,
     'include_package_data': True,
     'data_files': [
