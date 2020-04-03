@@ -80,9 +80,9 @@ class NPM(Command):
         npmName = 'npm';
         if platform.system() == 'Windows':
             npmName = 'npm.cmd';
-            
+
         return npmName;
-    
+
     def has_npm(self):
         npmName = self.get_npm_name();
         try:
@@ -151,7 +151,7 @@ setup_args = {
     },
 
     'author': 'Daniel Sandberg',
-    'author_email': 'danisan@stud.ntnu.no',
+    'author_email': 'dsanddev93@gmail.no',
     'url': 'https://github.com//program-completion-exercise-widget',
     'keywords': [
         'ipython',
