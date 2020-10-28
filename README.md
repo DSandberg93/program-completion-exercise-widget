@@ -6,10 +6,14 @@ A custom widget for solving program completion exercises in Python
 Installation
 ------------
 
+<strike>
 To install use pip:
 
     $ pip install procoe
     $ jupyter nbextension enable --py --sys-prefix procoe
+</strike>
+
+This widget is currently not available for installation as a package using pip. Please use development installation for now.
 
 To install for jupyterlab
 
